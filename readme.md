@@ -43,6 +43,10 @@ Features.
  - tictactoe_phx -> The game server for tictactoe game, using Garuda.
  ## Running Systems
  Documentations and how to run are in their own folder's readme.
+
+# NOTE
+### The Project is not complete not its cant be tested.
+
 # garudajs
  Javascript client for Garuda.
 ## Installation
