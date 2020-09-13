@@ -1,7 +1,7 @@
 <nav class="navbar orwell-navbar">
       <div class="navbar-brand">
           <div class="navbar-item">
-              <p class="brand-text">Orwell</p>
+              <p class="brand-text">Garuda</p>
           </div>
       </div>
 </nav>
@@ -31,7 +31,7 @@
             <div class="column is-one-quarter dashboard-column"><%= room["room_id"] %></div>
             <div class="column is-one-quarter dashboard-column"><%= room["room_name"] %></div>
             <div class="column is-one-quarter dashboard-column"><%= room["time"] %></div>
-            <div class="column is-one-quarter dashboard-column">
+            <div class="column is-one-quarter dashboard-column room-buttons">
                 <button class="button is-rounded is-primary"
                     phx-click="inspect"
                     phx-value-name="<%= room["room_name"] %>"

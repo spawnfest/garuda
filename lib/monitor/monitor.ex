@@ -4,7 +4,7 @@ defmodule Garuda.Monitor do
     quote do
       scope "/" do
         pipe_through :browser
-        live "/test", Garuda.Monitor.OrwellDashboard
+        live "/monitor", Garuda.Monitor.OrwellDashboard
       end
     end
   end
