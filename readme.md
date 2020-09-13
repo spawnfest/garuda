@@ -45,7 +45,7 @@ Features.
  Documentations and how to run are in their own folder's readme.
 
 # NOTE
-### The Project is not complete not its cant be tested.
+### The Project is not complete and cannot be tested.
 
 # garudajs
  Javascript client for Garuda.
