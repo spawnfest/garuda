@@ -1,4 +1,5 @@
 ![garuda logo](assets/garuda_title.png?raw=true "title")
+# Garuda
 > ### A multiplayer game server framework for BEAM
   > Build and run game servers intuitively.
   
@@ -6,7 +7,7 @@ Garuda  is an Authoritative Multiplayer Game Server for phoenix framework.
 
 The project focuses on providing a *game framework system*, *matchmaking*, *real-time game-session monitoring system* and ease of usage both on server-side and client-side, by leveraging the powerful phoenix framework.   
 
-The goal of the framework is to be a standard netcode & matchmaking solution for all type of games. Let's build and run game servers, in a much more intuitive way.
+The goal of the framework is to be a standard netcode & matchmaking solution for all type of games. BEAM directly maps the use cases of a typical game server. So Let's build and run game servers, in a much more intuitive way.
 
 Current feature list. 
  -   WebSocket-based communication (Will support more transports layer in future, thanks to phoenix)
@@ -35,5 +36,35 @@ Features.
  ### Client Side Support.
  Garuda ships with a javascript client **garudajs**, which allows easy communication with the server.
   
+## Repo Structure
+ - garuda -> The core framework.
+ - garudajs -> Javascript client.
+ - tictactoe_client -> The client side game, built with phaser3 engine.
+ - tictactoe_phx -> The game server for tictactoe game, using Garuda.
+ ## Running Systems
+ Documentations and how to run are in their own folder's readme.
+# garudajs
+ Javascript client for Garuda.
+## Installation
+
+    npm install garudajs
+## Usage
+
+    let garudaClient = new Garuda(ws://localhost:4000)
+Create garudaClient by giving the socket url as params
+
+    Garuda.getGameChannel("tictactoe", {player_count: 2}, onGameChannel)
+
+Returns a phoenix channel in the onGameChannel callback function, with the matchData.
+
+    let gameChannel;
+    function onGameChannel(game_channel, matchData) {
+	    gameChannel = game_channel;
+    }
+    gameChannel.join()
+	    .recieve("ok" => {"joined game channel successfully})
+	    .receive("error" => {console.log("error")} 
+
+gameChannel then works like a normal phoenix channel object. We can use all the functions of a channel onto gameChannel also.
 
  
