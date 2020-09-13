@@ -18,11 +18,11 @@ export class Core {
     this.connectToSocket();
   }
 
-  public leaveRoom() {
+  public leaveGameChannel() {
     this.gameChannel.leave();
   }
 
-  public joinRoom(roomName: string, params: IJoinRoom, callbackFunction: any) {
+  public getGameChannel(roomName: string, params: IJoinRoom, callbackFunction: any) {
     let maxPlayer = params.maxPlayers ? params.maxPlayers : 2;
     let matchmakerChannelName: string;
     this.gameRoomName = roomName;
@@ -49,7 +49,7 @@ export class Core {
         this.matchmakerChannel.leave();
         this.matchId = message["match_id"];
         this.gameChannel = this.socket.channel("room_" + this.gameRoomName + ":" + this.matchId);
-        callbackFunction(this.gameChannel);
+        callbackFunction(this.gameChannel, message);
     });
   }
 
