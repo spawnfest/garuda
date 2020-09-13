@@ -16,7 +16,9 @@ defmodule Garuda.Monitor.OrwellDashboard do
   require Logger
   alias Garuda.Monitor.DashboardData
   alias Garuda.RoomManager.RoomDb
-
+  alias Garuda.RoomManager.RoomSheduler
+  alias Garuda.RoomManager.Records
+  @polling_interval 5_000
   @doc """
     The Mount function gathers information from Game Server and creates liveview template
     This function also sends an :update event to self, after 10 seconds
@@ -27,7 +29,7 @@ defmodule Garuda.Monitor.OrwellDashboard do
     Logger.info "==============Running MOUNT ==================="
 
     #Sending event to self to poll gameserver data
-    Process.send_after(self(), :update, 10_000)
+    Process.send_after(self(), :update, @polling_interval)
 
     # Get data from Game Manager
     game_manager_data = RoomDb.get_stats()
@@ -37,7 +39,7 @@ defmodule Garuda.Monitor.OrwellDashboard do
     {:ok, assign(socket, :connections, game_manager_data["num_conns"] )
           |> assign(:num_rooms, game_manager_data["num_rooms"])
           |> assign(:list_rooms, game_manager_data["rooms"]
-          |> makeListRooms)
+          |> make_list_rooms)
           |> assign(:selected_room_id, :none)
           |> assign(:selected_room_name, :none)
           |> assign(:room_state, "")}
@@ -54,11 +56,11 @@ defmodule Garuda.Monitor.OrwellDashboard do
     Logger.info "=======INSPECT======== #{inspect(params)}"
     Logger.info "#{inspect(socket.assigns)}"
 
-    socket = assignRoomSelection(params["name"], params["id"], socket.assigns.selected_room_name, socket.assigns.selected_room_id, socket)
+    socket = assign_room_selection(params["name"], params["id"], socket.assigns.selected_room_name, socket.assigns.selected_room_id, socket)
     Logger.info "#{inspect(socket.assigns)}"
 
     ## Also assign the state of that room
-    socket = assignRoomState( socket.assigns.selected_room_name, socket.assigns.selected_room_id, socket )
+    socket = assign_room_state( socket.assigns.selected_room_name, socket.assigns.selected_room_id, socket )
     Logger.info "#{inspect(socket.assigns)}"
 
     {:noreply, socket}
@@ -66,9 +68,10 @@ defmodule Garuda.Monitor.OrwellDashboard do
 
   def handle_event("dispose", params, socket) do
     Logger.info "===================DISPOSE================"
-    Logger.info "dispose room ..... #{inspect(params["id"])}"
-    Logger.info "to be done...."
-
+    Logger.info "dispose room ..... #{inspect(params["name"])}:#{inspect params["id"]}"
+    # Logger.info "to be done...."
+    game_room_id = params["name"] <> ":" <> params["id"]
+    RoomSheduler.dispose_room(Records.via_tuple(game_room_id))
     {:noreply, socket}
   end
 
@@ -79,20 +82,20 @@ defmodule Garuda.Monitor.OrwellDashboard do
   """
   def handle_info(:update, socket) do
     #send event to self, to continously poll the game server data
-    Process.send_after(self(), :update, 10_000)
+    Process.send_after(self(), :update, @polling_interval)
 
     game_manager_data = RoomDb.get_stats()
     Logger.info("=================UPDATE============")
     Logger.info("#{inspect(socket.assigns)}")
 
     # game_room_id = socket.assigns.selected_room_name <> ":" <> socket.assigns.selected_room_id
-    # socket = assign(socket, :room_state, DashboardData.getRoomstate(game_room_id) |> stateToString )
-    socket = assignRoomState( socket.assigns.selected_room_name, socket.assigns.selected_room_id, socket )
+    # socket = assign(socket, :room_state, DashboardData.get_room_state(game_room_id) |> state_to_string )
+    socket = assign_room_state( socket.assigns.selected_room_name, socket.assigns.selected_room_id, socket )
     {
       :noreply, assign(socket, :connections, game_manager_data["num_conns"] )
       |> assign(:num_rooms, game_manager_data["num_rooms"])
       |> assign(:list_rooms, game_manager_data["rooms"]
-      |> makeListRooms)
+      |> make_list_rooms)
     }
   end
 
@@ -100,59 +103,59 @@ defmodule Garuda.Monitor.OrwellDashboard do
 
   #######PRIVATE
 
-  defp assignRoomSelection(_new_name, _new_id, _new_name, _new_id, soc) do
+  defp assign_room_selection(new_name, new_id, new_name, new_id, soc) do
     soc = assign(soc, :selected_room_id, :none)
-    soc = assign(soc, :selected_room_name, :none)
+    assign(soc, :selected_room_name, :none)
   end
-  defp assignRoomSelection(new_name, new_id, old_name, old_id, soc) do
+  defp assign_room_selection(new_name, new_id, _old_name, _old_id, soc) do
     soc = assign(soc, :selected_room_id, new_id)
-    soc = assign(soc, :selected_room_name, new_name)
+    assign(soc, :selected_room_name, new_name)
   end
 
-  defp assignRoomState(:none, :none, soc) do
+  defp assign_room_state(:none, :none, soc) do
     soc
   end
-  defp assignRoomState(name, id, soc) do
+  defp assign_room_state(name, id, soc) do
     game_room_id = name <> ":" <> id
-    assign(soc, :room_state, DashboardData.getRoomstate(game_room_id) |> stateToString )
+    assign(soc, :room_state, DashboardData.get_room_state(game_room_id) |> state_to_string )
   end
 
 
-  defp makeListRooms( room_map ) do
+  defp make_list_rooms( room_map ) do
     Map.keys( room_map )
     |> Enum.map( fn x -> room_map[x]
     |> Map.put("pid", x) end )
-    |> Enum.map( fn x -> timeDiff(x) end)
+    |> Enum.map( fn x -> time_diff(x) end)
   end
 
-  defp stateToString(statemap) do
+  defp state_to_string(statemap) do
     Map.keys(statemap)
     |> Enum.map( fn x -> " #{x} => #{statemap[x]} " end)
     |> Enum.join(" ,\n")
   end
 
-  defp timeDiff( param_map) do
+  defp time_diff( param_map) do
     seconds = :os.system_time(:milli_seconds) - param_map["time"] |> div(1000)
     Logger.info "#{inspect(seconds) }seconds"
     param_map
-    |> Map.update!("time", fn _x -> getTimeDiffString(seconds, "*", "seconds")
+    |> Map.update!("time", fn _x -> get_time_diff_string(seconds, "*", "seconds")
     |> String.trim_leading("*") end )
   end
 
-  defp getTimeDiffString( 0, timestr, _units) do
+  defp get_time_diff_string( 0, timestr, _units) do
     timestr
   end
-  defp getTimeDiffString( diff, timestr, units) do
+  defp get_time_diff_string( diff, timestr, units) do
     case units do
       "seconds" ->
           str = String.replace_leading(timestr, "*", "*"<>Integer.to_string(rem(diff, 60))<>" seconds" )
-          getTimeDiffString( div(diff, 60), str, "minutes" )
+          get_time_diff_string( div(diff, 60), str, "minutes" )
       "minutes" ->
           str = "*"<>Integer.to_string(rem(diff, 60))<>" minute\(s\)"
-          getTimeDiffString( div(diff, 60), str, "hours" )
+          get_time_diff_string( div(diff, 60), str, "hours" )
       "hours" ->
           str = String.replace_leading( timestr, "*", "*"<>Integer.to_string( rem(diff, 24))<>" hour\(s\), ")
-          getTimeDiffString( div(diff, 24), str, "days" )
+          get_time_diff_string( div(diff, 24), str, "days" )
       "days" ->
           str = String.replace_leading( timestr, "*", Integer.to_string(diff)<>" day\(s\), " )
           [days | [hours | _minutes] ] = String.split(str, ",")
