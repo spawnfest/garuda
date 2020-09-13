@@ -14,6 +14,7 @@ class Core {
     }
     getGameChannel(roomName, params, callbackFunction) {
         let maxPlayer = params.maxPlayers ? params.maxPlayers : 2;
+        let playerId = params.playerId ? params.playerId : this.playerId;
         let matchmakerChannelName;
         this.gameRoomName = roomName;
         if (params.matchId) {
@@ -26,7 +27,7 @@ class Core {
         }
         let matchSendInfo = {
             player_count: maxPlayer,
-            player_id: this.playerId,
+            player_id: playerId,
             room_name: matchmakerChannelName,
             match_id: this.matchId,
         };
@@ -38,7 +39,7 @@ class Core {
             console.log("On match maker event", message);
             this.matchmakerChannel.leave();
             this.matchId = message["match_id"];
-            this.gameChannel = this.socket.channel("room_" + this.gameRoomName + ":" + this.matchId);
+            this.gameChannel = this.matchId ? this.socket.channel("room_" + this.gameRoomName + ":" + this.matchId) : undefined;
             callbackFunction(this.gameChannel, message);
         });
     }
