@@ -1,6 +1,6 @@
 ![garuda logo](assets/garuda_title.png?raw=true "title")
 # Garuda
-> ### A multiplayer game server framework for BEAM
+> ### A multiplayer game server framework for phoenix.
   > Build and run game servers intuitively.
   
 Garuda  is an Authoritative Multiplayer Game Server for phoenix framework.
@@ -67,4 +67,46 @@ Returns a phoenix channel in the onGameChannel callback function, with the match
 
 gameChannel then works like a normal phoenix channel object. We can use all the functions of a channel onto gameChannel also.
 
- 
+# Garuda
+## Usage
+
+    defp deps do
+    [
+      {:garuda, git:  "https://github.com/spawnfest/garuda.git", branch:  "develop"}
+    ]
+### In user_socket.ex
+
+    defmodule  DummyWeb.UserSocket  do
+	    use  Garuda.GameSocket
+        game_channel "room_name", DummyWeb.roomChannel,Dummy.gameRoom
+### In channel module
+
+    defmodule  DummyWeb.ClickerChannel  do
+      use  Garuda.GameChannel
+      
+      alias  Dummy.ClickRoom
+  
+      @impl  true
+      def  on_join(_params, _socket) do
+      IO.puts("Player joined Clicker game")
+      end
+    
+      @impl  true 
+      def  authorized?(_params) do
+        # auth code
+      end
+      
+      # Handling event by typical handle_in
+      @impl  true
+      def  handle_in("click", _message, socket) do
+      IO.puts("clicking")
+      ClickRoom.on_click(id(socket))
+      {:noreply, socket}
+      end
+      
+      @impl  true
+      def  on_leave(reason, _socket) do
+      # leave callback, disposing rooom 
+      end
+    end
+
