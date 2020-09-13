@@ -1,4 +1,4 @@
-![garuda logo](https://raw.githubusercontent.com/spawnfest/garuda/master/assets/gard.png)
+![garuda logo](assets/gard.png?raw=true "logo")
 # Garuda
 > ### A multiplayer game server framework for BEAM
   > Build and run game servers intuitively.
